@@ -1,0 +1,43 @@
+{
+    "name": "c3037/homework-2-scaling-issue",
+    "authors": [
+        {
+            "name": "Dmitry P.",
+            "email": "dmitry.porozhnyakov@mail.ru"
+        }
+    ],
+    "require": {
+        "php": "^7.2.1",
+        "ext-pthreads": "^3.1.7-dev",
+        "symfony/config": "^4.0",
+        "symfony/dependency-injection": "^4.0",
+        "symfony/yaml": "^4.0",
+        "c3037/otus-first-week-library": "^4.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^6.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "c3037\\Otus\\SecondWeek\\": ["src/"]
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "c3037\\Otus\\SecondWeek\\": ["tests/"]
+        }
+    },
+    "scripts": {
+        "copy-configs": [
+            "[ -f app/parameters.yaml ] || cp app/parameters.yaml.dist app/parameters.yaml",
+            "[ -f tests/phpunit.xml ] || cp tests/phpunit.xml.dist tests/phpunit.xml"
+        ],
+        "post-install-cmd": [
+            "@copy-configs"
+        ],
+        "post-update-cmd": [
+            "@copy-configs"
+        ]
+    },
+    "license": "MIT"
+}
