@@ -29,16 +29,15 @@ final class Server implements ServerInterface
      */
     public function run(ArrayAccess &$threadList): void
     {
-        $synchronizedData = new Volatile();
-        $synchronizedData['workerList'] = [];
-        $synchronizedData['container'] = $this->container;
-        $synchronizedData['autoload'] = spl_autoload_functions();
+        $workerList = new Volatile();
 
-        $thread = new ConnectionAcceptorThread($synchronizedData);
+        $thread = new ConnectionAcceptorThread($workerList);
+        $thread->setContainer($this->container);
+        $thread->setAutoloaders(spl_autoload_functions());
         $thread->start();
         $threadList[] = $thread;
 
-        $thread = new ZombieKillerThread($synchronizedData);
+        $thread = new ZombieKillerThread($workerList);
         $thread->start();
         $threadList[] = $thread;
     }

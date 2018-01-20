@@ -11,14 +11,14 @@ final class ZombieKillerThread extends Thread
     /**
      * @var Volatile
      */
-    private $synchronizedData;
+    private $workerList;
 
     /**
-     * @param Volatile $synchronizedData
+     * @param Volatile $workerList
      */
-    public function __construct(Volatile $synchronizedData)
+    public function __construct(Volatile $workerList)
     {
-        $this->synchronizedData = $synchronizedData;
+        $this->workerList = $workerList;
     }
 
     /**
@@ -26,16 +26,13 @@ final class ZombieKillerThread extends Thread
      */
     public function run(): void
     {
-        $workerList =& $this->synchronizedData['workerList'];
-        /** @var int[] $workerList */
-
         while (true) {
-            foreach ($workerList as $k => $worker) {
+            foreach ($this->workerList as $k => $worker) {
                 if (pcntl_waitpid($worker, $status, WNOHANG) <= 0) {
                     continue;
                 }
-                $this->synchronized(function () use (&$workerList, $k) {
-                    unset($workerList[$k]);
+                $this->synchronized(function () use ($k) {
+                    unset($this->workerList[$k]);
                 });
             }
             sleep(1);
