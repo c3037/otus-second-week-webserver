@@ -28,7 +28,7 @@ final class ConnectionAcceptorThread extends Thread
      */
     public function run(): void
     {
-        $this->registerAutoload();
+        $this->bindAutoloaders();
 
         $socket = $this->createSocket();
 
@@ -59,7 +59,7 @@ final class ConnectionAcceptorThread extends Thread
     /**
      * @return void
      */
-    private function registerAutoload(): void
+    private function bindAutoloaders(): void
     {
         $autoLoaders = $this->synchronizedData['autoload'];
         /** @var mixed[] $autoLoaders */
