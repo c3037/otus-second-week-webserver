@@ -14,6 +14,11 @@ final class ZombieKillerThread extends Thread
     private $workerList;
 
     /**
+     * @var bool
+     */
+    private $terminateSignal = false;
+
+    /**
      * @param Volatile $workerList
      */
     public function __construct(Volatile $workerList)
@@ -27,15 +32,51 @@ final class ZombieKillerThread extends Thread
     public function run(): void
     {
         while (true) {
-            foreach ($this->workerList as $k => $worker) {
-                if (pcntl_waitpid($worker, $status, WNOHANG) <= 0) {
-                    continue;
-                }
-                $this->synchronized(function () use ($k) {
-                    unset($this->workerList[$k]);
-                });
+            if ($this->hasTerminateSignal()) {
+                break;
             }
-            sleep(1);
+
+            $this->readWorkerExitCodes();
+            usleep(200000);
         }
+    }
+
+    /**
+     * @return void
+     */
+    public function terminate(): void
+    {
+        $this->terminateSignal = true;
+    }
+
+    /**
+     * @return bool
+     */
+    private function hasTerminateSignal(): bool
+    {
+        return $this->terminateSignal;
+    }
+
+    /**
+     * @return void
+     */
+    private function readWorkerExitCodes(): void
+    {
+        foreach ($this->workerList as $workerPid) {
+            if (pcntl_waitpid($workerPid, $status, WNOHANG) <= 0) {
+                continue;
+            }
+            $this->dropWorkerFromList($workerPid);
+        }
+    }
+
+    /**
+     * @param int $workerPid
+     */
+    private function dropWorkerFromList(int $workerPid): void
+    {
+        $this->synchronized(function () use ($workerPid) {
+            unset($this->workerList[$workerPid]);
+        });
     }
 }

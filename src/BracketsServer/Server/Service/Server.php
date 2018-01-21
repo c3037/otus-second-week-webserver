@@ -3,10 +3,11 @@ declare(strict_types=1);
 
 namespace c3037\Otus\SecondWeek\BracketsServer\Server\Service;
 
-use ArrayAccess;
+use ArrayObject;
 use c3037\Otus\SecondWeek\BracketsServer\Server\Service\Thread\ConnectionAcceptorThread;
 use c3037\Otus\SecondWeek\BracketsServer\Server\Service\Thread\ZombieKillerThread;
 use Psr\Container\ContainerInterface;
+use Thread;
 use Volatile;
 
 final class Server implements ServerInterface
@@ -17,17 +18,24 @@ final class Server implements ServerInterface
     private $container;
 
     /**
+     * @var ArrayObject|Thread[]
+     */
+    private $threadList;
+
+    /**
      * @param ContainerInterface $container
      */
     public function __construct(ContainerInterface $container)
     {
         $this->container = $container;
+
+        $this->threadList = new ArrayObject();
     }
 
     /**
      * {@inheritdoc}
      */
-    public function run(ArrayAccess &$threadList): void
+    public function run(): void
     {
         $workerList = new Volatile();
 
@@ -35,19 +43,22 @@ final class Server implements ServerInterface
         $thread->setContainer($this->container);
         $thread->setAutoloaders(spl_autoload_functions());
         $thread->start();
-        $threadList[] = $thread;
+        $this->threadList->append($thread);
 
         $thread = new ZombieKillerThread($workerList);
         $thread->start();
-        $threadList[] = $thread;
+        $this->threadList->append($thread);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function interruptHandler(ArrayAccess &$threadList): void
+    public function interruptHandler(): void
     {
-        printf('%sInterrupt handler...%s', PHP_EOL, PHP_EOL);
+        printf('%sInterrupting server...%s', PHP_EOL, PHP_EOL);
+        foreach ($this->threadList as $thread) {
+            $thread->terminate();
+        }
         exit;
     }
 }

@@ -27,7 +27,6 @@ final class Socket implements SocketInterface
     public function __construct(BindParamsDeterminatorInterface $bindParamsDeterminator, int $maxConcurrentConnections)
     {
         $this->socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
-        socket_set_block($this->socket);
 
         $this->bindParamsDeterminator = $bindParamsDeterminator;
         $this->maxConcurrentConnections = $maxConcurrentConnections;
@@ -50,13 +49,19 @@ final class Socket implements SocketInterface
 
         socket_bind($this->socket, $bindParams->getHost(), $bindParams->getPort());
         socket_listen($this->socket, $this->maxConcurrentConnections);
+        socket_set_nonblock($this->socket);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getConnection()
+    public function getNewConnection()
     {
-        return socket_accept($this->socket);
+        $connection = socket_accept($this->socket);
+        if ($connection) {
+            socket_set_block($connection);
+        }
+
+        return $connection;
     }
 }

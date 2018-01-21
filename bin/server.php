@@ -11,26 +11,25 @@ require_once dirname(__DIR__) . '/vendor/autoload.php';
 set_time_limit(0);
 ob_implicit_flush();
 
-printf('Building DI container.%s', PHP_EOL);
+printf('Building DI container...%s', PHP_EOL);
 $container = new ContainerBuilder();
 $loader = new YamlFileLoader($container, new FileLocator(dirname(__DIR__) . '/app'));
 $loader->load(dirname(__DIR__) . '/app/parameters.yaml');
 $loader->load(dirname(__DIR__) . '/app/services.yaml');
 
-printf('Initialising kernel objects.%s', PHP_EOL);
-$threadList = new ArrayObject();
+printf('Initialising server...%s', PHP_EOL);
 $server = new Server($container);
 
-//printf('Binding IPC signal handlers.%s', PHP_EOL);
-//pcntl_async_signals(true);
-//pcntl_signal(SIGINT, function () use (&$server, &$threadList) {
-//    $server->interruptHandler($threadList);
-//});
+printf('Binding IPC signal handlers...%s', PHP_EOL);
+pcntl_async_signals(true);
+pcntl_signal(SIGINT, function () use ($server) {
+    $server->interruptHandler();
+});
 
-printf('Starting server.%s', PHP_EOL);
-$server->run($threadList);
+printf('Starting server...%s', PHP_EOL);
+$server->run();
 
-printf('Server is ready to accept connections.%s', PHP_EOL);
+printf('Server is ready to accept connections...%s', PHP_EOL);
 while (true) {
     sleep(PHP_INT_MAX);
 }

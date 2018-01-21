@@ -28,6 +28,11 @@ final class ConnectionAcceptorThread extends Thread
     private $autoloaders;
 
     /**
+     * @var bool
+     */
+    private $terminateSignal = false;
+
+    /**
      * @param Volatile $workerList
      */
     public function __construct(Volatile $workerList)
@@ -67,6 +72,14 @@ final class ConnectionAcceptorThread extends Thread
     /**
      * @return void
      */
+    public function terminate(): void
+    {
+        $this->terminateSignal = true;
+    }
+
+    /**
+     * @return void
+     */
     private function bindAutoloaders(): void
     {
         foreach ($this->autoloaders as $autoLoader) {
@@ -93,19 +106,33 @@ final class ConnectionAcceptorThread extends Thread
     private function waitConnections(SocketInterface $socket): void
     {
         while (true) {
-            $clientConnection = $socket->getConnection();
-
-            $newWorkerPid = pcntl_fork();
-            if (empty($newWorkerPid)) {
-                $this->getWorkerPrototype()->run($clientConnection);
+            if ($this->hasTerminateSignal()) {
                 break;
             }
 
-            $this->synchronized(function () use ($newWorkerPid) {
-                $this->workerList[] = $newWorkerPid;
-            });
-            unset($clientConnection);
+            $newConnection = $socket->getNewConnection();
+            if ($newConnection) {
+
+                $workerPid = pcntl_fork();
+                if (empty($workerPid)) {
+                    $this->getWorkerPrototype()->run($newConnection);
+                    break;
+                }
+
+                $this->addWorkerToList($workerPid);
+                unset($newConnection);
+
+            }
+            usleep(200000);
         }
+    }
+
+    /**
+     * @return bool
+     */
+    private function hasTerminateSignal(): bool
+    {
+        return $this->terminateSignal;
     }
 
     /**
@@ -115,5 +142,15 @@ final class ConnectionAcceptorThread extends Thread
     private function getWorkerPrototype(): WorkerInterface
     {
         return $this->container->get('worker');
+    }
+
+    /**
+     * @param int $workerPid
+     */
+    private function addWorkerToList(int $workerPid): void
+    {
+        $this->synchronized(function () use ($workerPid) {
+            $this->workerList[$workerPid] = $workerPid;
+        });
     }
 }

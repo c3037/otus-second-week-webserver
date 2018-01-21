@@ -3,17 +3,15 @@ declare(strict_types=1);
 
 namespace c3037\Otus\SecondWeek\BracketsServer\Server\Service;
 
-use ArrayAccess;
-
 interface ServerInterface
 {
     /**
-     * @param ArrayAccess $threadList
+     * @return void
      */
-    public function run(ArrayAccess &$threadList): void;
+    public function run(): void;
 
     /**
-     * @param ArrayAccess $threadList
+     * @return void
      */
-    public function interruptHandler(ArrayAccess &$threadList): void;
+    public function interruptHandler(): void;
 }
