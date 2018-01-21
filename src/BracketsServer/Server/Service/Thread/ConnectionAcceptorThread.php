@@ -115,7 +115,7 @@ final class ConnectionAcceptorThread extends Thread implements ThreadInterface
 
                 $workerPid = pcntl_fork();
                 if (empty($workerPid)) {
-                    $this->getWorker()->communicate($newConnection);
+                    $this->getWorkerService()->communicate($newConnection);
                     break;
                 }
 
@@ -139,7 +139,7 @@ final class ConnectionAcceptorThread extends Thread implements ThreadInterface
      * @return WorkerInterface
      * @throws ContainerExceptionInterface
      */
-    private function getWorker(): WorkerInterface
+    private function getWorkerService(): WorkerInterface
     {
         return $this->container->get('worker');
     }
