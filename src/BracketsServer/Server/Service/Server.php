@@ -55,7 +55,6 @@ final class Server implements ServerInterface
      */
     public function interruptHandler(): void
     {
-        printf('%sInterrupting server...%s', PHP_EOL, PHP_EOL);
         foreach ($this->threadList as $thread) {
             $thread->terminate();
         }
