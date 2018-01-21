@@ -40,7 +40,7 @@ final class Worker implements WorkerInterface
     /**
      * {@inheritdoc}
      */
-    public function run($clientConnection): void
+    public function communicate($clientConnection): void
     {
         $this->printWelcomeMessage($clientConnection);
 

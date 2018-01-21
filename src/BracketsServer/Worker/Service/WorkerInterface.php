@@ -8,5 +8,5 @@ interface WorkerInterface
     /**
      * @param resource $clientConnection
      */
-    public function run($clientConnection): void;
+    public function communicate($clientConnection): void;
 }

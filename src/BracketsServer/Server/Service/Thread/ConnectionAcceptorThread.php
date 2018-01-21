@@ -115,7 +115,7 @@ final class ConnectionAcceptorThread extends Thread
 
                 $workerPid = pcntl_fork();
                 if (empty($workerPid)) {
-                    $this->getWorkerPrototype()->run($newConnection);
+                    $this->getWorkerPrototype()->communicate($newConnection);
                     break;
                 }
 
