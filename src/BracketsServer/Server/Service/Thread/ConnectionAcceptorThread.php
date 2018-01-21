@@ -10,7 +10,7 @@ use Psr\Container\ContainerInterface;
 use Thread;
 use Volatile;
 
-final class ConnectionAcceptorThread extends Thread
+final class ConnectionAcceptorThread extends Thread implements ThreadInterface
 {
     /**
      * @var Volatile
@@ -70,7 +70,7 @@ final class ConnectionAcceptorThread extends Thread
     }
 
     /**
-     * @return void
+     * {@inheritdoc}
      */
     public function terminate(): void
     {

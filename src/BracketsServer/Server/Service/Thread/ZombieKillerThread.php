@@ -6,7 +6,7 @@ namespace c3037\Otus\SecondWeek\BracketsServer\Server\Service\Thread;
 use Thread;
 use Volatile;
 
-final class ZombieKillerThread extends Thread
+final class ZombieKillerThread extends Thread implements ThreadInterface
 {
     /**
      * @var Volatile
@@ -42,7 +42,7 @@ final class ZombieKillerThread extends Thread
     }
 
     /**
-     * @return void
+     * {@inheritdoc}
      */
     public function terminate(): void
     {

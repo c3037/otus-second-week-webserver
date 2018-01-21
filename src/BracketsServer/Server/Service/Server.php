@@ -5,9 +5,9 @@ namespace c3037\Otus\SecondWeek\BracketsServer\Server\Service;
 
 use ArrayObject;
 use c3037\Otus\SecondWeek\BracketsServer\Server\Service\Thread\ConnectionAcceptorThread;
+use c3037\Otus\SecondWeek\BracketsServer\Server\Service\Thread\ThreadInterface;
 use c3037\Otus\SecondWeek\BracketsServer\Server\Service\Thread\ZombieKillerThread;
 use Psr\Container\ContainerInterface;
-use Thread;
 use Volatile;
 
 final class Server implements ServerInterface
@@ -18,7 +18,7 @@ final class Server implements ServerInterface
     private $container;
 
     /**
-     * @var ArrayObject|Thread[]
+     * @var ArrayObject|ThreadInterface[]
      */
     private $threadList;
 
@@ -39,15 +39,8 @@ final class Server implements ServerInterface
     {
         $workerList = new Volatile();
 
-        $thread = new ConnectionAcceptorThread($workerList);
-        $thread->setContainer($this->container);
-        $thread->setAutoloaders(spl_autoload_functions());
-        $thread->start();
-        $this->threadList->append($thread);
-
-        $thread = new ZombieKillerThread($workerList);
-        $thread->start();
-        $this->threadList->append($thread);
+        $this->startConnectionAcceptorThread($workerList);
+        $this->startZombieKillerThread($workerList);
     }
 
     /**
@@ -55,9 +48,38 @@ final class Server implements ServerInterface
      */
     public function interruptHandler(): void
     {
+        $this->terminateThreads();
+    }
+
+    /**
+     * @param Volatile $workerList
+     */
+    private function startConnectionAcceptorThread(Volatile $workerList): void
+    {
+        $thread = new ConnectionAcceptorThread($workerList);
+        $thread->setContainer($this->container);
+        $thread->setAutoloaders(spl_autoload_functions());
+        $thread->start();
+        $this->threadList->append($thread);
+    }
+
+    /**
+     * @param Volatile $workerList
+     */
+    private function startZombieKillerThread(Volatile $workerList): void
+    {
+        $thread = new ZombieKillerThread($workerList);
+        $thread->start();
+        $this->threadList->append($thread);
+    }
+
+    /**
+     * @return void
+     */
+    private function terminateThreads(): void
+    {
         foreach ($this->threadList as $thread) {
             $thread->terminate();
         }
-        exit;
     }
 }
