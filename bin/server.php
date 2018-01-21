@@ -22,9 +22,7 @@ $server = new Server($container);
 
 printf('Binding IPC signal handlers...%s', PHP_EOL);
 pcntl_async_signals(true);
-pcntl_signal(SIGINT, function () use ($server) {
-    $server->interruptHandler();
-});
+pcntl_signal(SIGINT, [$server, 'interruptHandler']);
 
 printf('Starting server...%s', PHP_EOL);
 $server->run();
