@@ -17,6 +17,7 @@
     "require-dev": {
         "phpunit/phpunit": "^6.5"
     },
+    "repositories": [],
     "autoload": {
         "psr-4": {
             "c3037\\Otus\\SecondWeek\\": ["src/"]

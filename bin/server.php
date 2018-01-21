@@ -13,6 +13,7 @@ ob_implicit_flush();
 
 printf('Building DI container...%s', PHP_EOL);
 $container = new ContainerBuilder();
+$container->setParameter('script_arguments', $args ?? $_SERVER['argv']);
 $loader = new YamlFileLoader($container, new FileLocator(dirname(__DIR__) . '/app'));
 $loader->load(dirname(__DIR__) . '/app/parameters.yaml');
 $loader->load(dirname(__DIR__) . '/app/services.yaml');

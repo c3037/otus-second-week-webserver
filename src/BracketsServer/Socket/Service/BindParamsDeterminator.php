@@ -10,6 +10,11 @@ final class BindParamsDeterminator implements BindParamsDeterminatorInterface
     /**
      * @var array
      */
+    private $scriptArguments;
+
+    /**
+     * @var array
+     */
     private $hostConfig;
 
     /**
@@ -18,11 +23,13 @@ final class BindParamsDeterminator implements BindParamsDeterminatorInterface
     private $portConfig;
 
     /**
+     * @param array $scriptArguments
      * @param array $hostConfig
      * @param array $portConfig
      */
-    public function __construct(array $hostConfig, array $portConfig)
+    public function __construct(array $scriptArguments, array $hostConfig, array $portConfig)
     {
+        $this->scriptArguments = $scriptArguments;
         $this->hostConfig = $hostConfig;
         $this->portConfig = $portConfig;
     }
@@ -69,11 +76,14 @@ final class BindParamsDeterminator implements BindParamsDeterminatorInterface
      */
     private function getcli(array $config): string
     {
-        $shortOpts = sprintf('%s:', $config['short']);
-        $longOpts = [sprintf('%s:', $config['long'])];
+        $pattern = sprintf('#(?:-%s|--%s)=(.*)#i', $config['short'], $config['long']);
 
-        $scriptArguments = getopt($shortOpts, $longOpts);
+        foreach ($this->scriptArguments as $argument) {
+            if (preg_match($pattern, $argument, $match)) {
+                return $match[1];
+            }
+        }
 
-        return $scriptArguments[$config['short']] ?? $scriptArguments[$config['long']] ?? '';
+        return '';
     }
 }

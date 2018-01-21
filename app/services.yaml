@@ -11,6 +11,7 @@ services:
     bind_params_determinator:
         class: c3037\Otus\SecondWeek\BracketsServer\Socket\Service\BindParamsDeterminator
         arguments:
+            - '%script_arguments%'
             - '%host%'
             - '%port%'
 

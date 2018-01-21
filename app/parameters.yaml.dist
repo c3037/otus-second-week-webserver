@@ -3,14 +3,14 @@ parameters:
     max_concurrent_connections: 128
     max_input_message_length: 1024
     host:
-        environment_variable: 'BSS_HOST'
         cli_arguments:
             short: 'h'
             long: 'host'
+        environment_variable: 'BSS_HOST'
         default: 'localhost'
     port:
-        environment_variable: 'BSS_PORT'
         cli_arguments:
             short: 'p'
             long: 'port'
+        environment_variable: 'BSS_PORT'
         default: 19118
