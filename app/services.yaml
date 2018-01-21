@@ -5,6 +5,7 @@ services:
         arguments:
             - '@bind_params_determinator'
             - '%max_concurrent_connections%'
+        shared: false
 
     # Bind params determinator
     bind_params_determinator:
