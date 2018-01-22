@@ -1,6 +1,6 @@
 parameters:
     quit_command: 'quit'
-    max_concurrent_connections: 128
+    max_concurrent_connections: 128 # todo: notWorking
     input_message_chunk_length: 1024
     host:
         cli_arguments:
