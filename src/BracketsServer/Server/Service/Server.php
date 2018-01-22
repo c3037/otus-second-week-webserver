@@ -40,7 +40,6 @@ final class Server implements ServerInterface
      */
     public function run(): void
     {
-        /** @var WorkerListInterface $workerList */
         $workerList = $this->createWorkerList();
 
         $this->startConnectionAcceptorThread($workerList);
