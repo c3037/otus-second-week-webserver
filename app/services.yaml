@@ -4,7 +4,7 @@ services:
         class: c3037\Otus\SecondWeek\BracketsServer\Socket\Service\Socket
         arguments:
             - '@bind_params_determinator'
-            - '%max_concurrent_connections%'
+            - '%max_waiting_connections%'
         shared: false
 
     bind_params_determinator:
@@ -12,6 +12,12 @@ services:
         arguments:
             - '%host%'
             - '%port%'
+
+    # Worker list
+    worker_list:
+        class: c3037\Otus\SecondWeek\BracketsServer\Server\Service\WorkerList\WorkerList
+        arguments:
+            - '%max_open_connections%'
 
     # Worker
     worker:

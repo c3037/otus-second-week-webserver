@@ -7,11 +7,12 @@ use ArrayObject;
 use c3037\Otus\SecondWeek\BracketsServer\Server\Service\Thread\ConnectionAcceptorThread;
 use c3037\Otus\SecondWeek\BracketsServer\Server\Service\Thread\ThreadInterface;
 use c3037\Otus\SecondWeek\BracketsServer\Server\Service\Thread\ZombieKillerThread;
+use c3037\Otus\SecondWeek\BracketsServer\Server\Service\WorkerList\WorkerListInterface;
 use c3037\Otus\SecondWeek\BracketsServer\Socket\Service\SocketInterface;
 use c3037\Otus\SecondWeek\BracketsServer\Worker\Service\WorkerInterface;
-use Psr\Container\ContainerExceptionInterface;
-use Psr\Container\ContainerInterface;
-use Volatile;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\DependencyInjection\Exception\ServiceCircularReferenceException;
+use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
 
 final class Server implements ServerInterface
 {
@@ -39,7 +40,8 @@ final class Server implements ServerInterface
      */
     public function run(): void
     {
-        $workerList = new Volatile();
+        /** @var WorkerListInterface $workerList */
+        $workerList = $this->createWorkerList();
 
         $this->startConnectionAcceptorThread($workerList);
         $this->startZombieKillerThread($workerList);
@@ -54,11 +56,22 @@ final class Server implements ServerInterface
     }
 
     /**
-     * @param Volatile $workerList
-     * @return void
-     * @throws ContainerExceptionInterface
+     * @return WorkerListInterface
+     * @throws ServiceNotFoundException
+     * @throws ServiceCircularReferenceException
      */
-    private function startConnectionAcceptorThread(Volatile $workerList): void
+    private function createWorkerList(): WorkerListInterface
+    {
+        return $this->container->get('worker_list');
+    }
+
+    /**
+     * @param WorkerListInterface $workerList
+     * @return void
+     * @throws ServiceCircularReferenceException
+     * @throws ServiceNotFoundException
+     */
+    private function startConnectionAcceptorThread(WorkerListInterface $workerList): void
     {
         $thread = new ConnectionAcceptorThread($workerList);
         $thread->setAutoloaders(spl_autoload_functions());
@@ -70,7 +83,8 @@ final class Server implements ServerInterface
 
     /**
      * @return SocketInterface
-     * @throws ContainerExceptionInterface
+     * @throws ServiceNotFoundException
+     * @throws ServiceCircularReferenceException
      */
     private function createSocket(): SocketInterface
     {
@@ -82,7 +96,8 @@ final class Server implements ServerInterface
 
     /**
      * @return WorkerInterface
-     * @throws ContainerExceptionInterface
+     * @throws ServiceNotFoundException
+     * @throws ServiceCircularReferenceException
      */
     private function createSubProcessWorker(): WorkerInterface
     {
@@ -90,10 +105,10 @@ final class Server implements ServerInterface
     }
 
     /**
-     * @param Volatile $workerList
+     * @param WorkerListInterface $workerList
      * @return void
      */
-    private function startZombieKillerThread(Volatile $workerList): void
+    private function startZombieKillerThread(WorkerListInterface $workerList): void
     {
         $thread = new ZombieKillerThread($workerList);
         $thread->start();

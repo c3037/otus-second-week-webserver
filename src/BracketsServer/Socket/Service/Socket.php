@@ -20,18 +20,18 @@ final class Socket extends Threaded implements SocketInterface
     /**
      * @var int
      */
-    private $maxConcurrentConnections;
+    private $backlogSize;
 
     /**
      * @param BindParamsDeterminatorInterface $bindParamsDeterminator
-     * @param int $maxConcurrentConnections
+     * @param int $maxWaitingConnections
      */
-    public function __construct(BindParamsDeterminatorInterface $bindParamsDeterminator, int $maxConcurrentConnections)
+    public function __construct(BindParamsDeterminatorInterface $bindParamsDeterminator, int $maxWaitingConnections)
     {
         $this->socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
 
         $this->bindParamsDeterminator = $bindParamsDeterminator;
-        $this->maxConcurrentConnections = $maxConcurrentConnections;
+        $this->backlogSize = $maxWaitingConnections;
     }
 
     /**
@@ -42,8 +42,7 @@ final class Socket extends Threaded implements SocketInterface
         $bindParams = $this->bindParamsDeterminator->determine();
 
         socket_bind($this->socket, $bindParams->getHost(), $bindParams->getPort());
-        // todo: maxConcurrentConnections not working
-        socket_listen($this->socket, $this->maxConcurrentConnections);
+        socket_listen($this->socket, $this->backlogSize);
         socket_set_nonblock($this->socket);
     }
 

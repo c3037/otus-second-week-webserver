@@ -3,15 +3,15 @@ declare(strict_types=1);
 
 namespace c3037\Otus\SecondWeek\BracketsServer\Server\Service\Thread;
 
+use c3037\Otus\SecondWeek\BracketsServer\Server\Service\WorkerList\WorkerListInterface;
 use c3037\Otus\SecondWeek\BracketsServer\Socket\Service\SocketInterface;
 use c3037\Otus\SecondWeek\BracketsServer\Worker\Service\WorkerInterface;
 use Thread;
-use Volatile;
 
 final class ConnectionAcceptorThread extends Thread implements ThreadInterface
 {
     /**
-     * @var Volatile
+     * @var WorkerListInterface
      */
     private $workerList;
 
@@ -36,9 +36,9 @@ final class ConnectionAcceptorThread extends Thread implements ThreadInterface
     private $subProcessWorker;
 
     /**
-     * @param Volatile $workerList
+     * @param WorkerListInterface $workerList
      */
-    public function __construct(Volatile $workerList)
+    public function __construct(WorkerListInterface $workerList)
     {
         $this->workerList = $workerList;
     }
@@ -108,7 +108,8 @@ final class ConnectionAcceptorThread extends Thread implements ThreadInterface
                 break;
             }
 
-            if ($clientConnection = $this->socket->acceptConnection()) {
+            if ($this->canAcceptNewConnections()
+                && $clientConnection = $this->socket->acceptConnection()) {
 
                 $workerPid = pcntl_fork();
                 if (empty($workerPid)) {
@@ -129,6 +130,14 @@ final class ConnectionAcceptorThread extends Thread implements ThreadInterface
     private function hasTerminateSignal(): bool
     {
         return $this->terminateSignal;
+    }
+
+    /**
+     * @return bool
+     */
+    private function canAcceptNewConnections(): bool
+    {
+        return !$this->workerList->isFull();
     }
 
     /**

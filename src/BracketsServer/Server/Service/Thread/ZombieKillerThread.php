@@ -3,13 +3,13 @@ declare(strict_types=1);
 
 namespace c3037\Otus\SecondWeek\BracketsServer\Server\Service\Thread;
 
+use c3037\Otus\SecondWeek\BracketsServer\Server\Service\WorkerList\WorkerListInterface;
 use Thread;
-use Volatile;
 
 final class ZombieKillerThread extends Thread implements ThreadInterface
 {
     /**
-     * @var Volatile
+     * @var WorkerListInterface
      */
     private $workerList;
 
@@ -19,9 +19,9 @@ final class ZombieKillerThread extends Thread implements ThreadInterface
     private $terminateSignal = false;
 
     /**
-     * @param Volatile $workerList
+     * @param WorkerListInterface $workerList
      */
-    public function __construct(Volatile $workerList)
+    public function __construct(WorkerListInterface $workerList)
     {
         $this->workerList = $workerList;
     }
