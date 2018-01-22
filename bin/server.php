@@ -17,7 +17,7 @@ $loader = new YamlFileLoader($container, new FileLocator(dirname(__DIR__) . '/ap
 $loader->load(dirname(__DIR__) . '/app/parameters.yaml');
 $loader->load(dirname(__DIR__) . '/app/services.yaml');
 
-printf('Initialising server...%s', PHP_EOL);
+printf('Initializing server...%s', PHP_EOL);
 $server = new Server($container);
 
 printf('Binding IPC signal handlers...%s', PHP_EOL);
