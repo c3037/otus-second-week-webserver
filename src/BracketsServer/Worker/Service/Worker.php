@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace c3037\Otus\SecondWeek\BracketsServer\Worker\Service;
 
+use c3037\Otus\SecondWeek\BracketsServer\Worker\Service\RequestProcessor\RequestProcessorInterface;
+
 final class Worker implements WorkerInterface
 {
     /**

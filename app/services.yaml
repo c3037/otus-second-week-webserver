@@ -22,7 +22,7 @@ services:
             - '%max_input_message_length%'
 
     brackets_validation_processor:
-        class: c3037\Otus\SecondWeek\BracketsServer\Worker\Service\BracketsValidationProcessor
+        class: c3037\Otus\SecondWeek\BracketsServer\Worker\Service\RequestProcessor\BracketsValidationProcessor
         arguments:
             - '@brackets_validator'
 

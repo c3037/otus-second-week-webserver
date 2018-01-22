@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace c3037\Otus\SecondWeek\BracketsServer\Worker\Service;
+namespace c3037\Otus\SecondWeek\BracketsServer\Worker\Service\RequestProcessor;
 
 use c3037\Otus\FirstWeek\Library\ValidatorInterface;
 use InvalidArgumentException;
