@@ -20,21 +20,21 @@ final class Worker implements WorkerInterface
     /**
      * @var int
      */
-    private $maxInputMessageLength;
+    private $inputMessageChunkLength;
 
     /**
      * @param RequestProcessorInterface $requestProcessor
      * @param string $quitCommand
-     * @param int $maxInputMessageLength
+     * @param int $inputMessageChunkLength
      */
     public function __construct(
         RequestProcessorInterface $requestProcessor,
         string $quitCommand,
-        int $maxInputMessageLength
+        int $inputMessageChunkLength
     ) {
         $this->requestProcessor = $requestProcessor;
         $this->quitCommand = $quitCommand;
-        $this->maxInputMessageLength = $maxInputMessageLength;
+        $this->inputMessageChunkLength = $inputMessageChunkLength;
     }
 
     /**
@@ -99,7 +99,7 @@ final class Worker implements WorkerInterface
      */
     private function readInput($clientConnection): string
     {
-        return trim(socket_read($clientConnection, $this->maxInputMessageLength));
+        return trim(socket_read($clientConnection, $this->inputMessageChunkLength));
     }
 
     /**

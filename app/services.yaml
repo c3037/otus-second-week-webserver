@@ -19,7 +19,7 @@ services:
         arguments:
             - '@brackets_validation_processor'
             - '%quit_command%'
-            - '%max_input_message_length%'
+            - '%input_message_chunk_length%'
 
     brackets_validation_processor:
         class: c3037\Otus\SecondWeek\BracketsServer\Worker\Service\RequestProcessor\BracketsValidationProcessor
