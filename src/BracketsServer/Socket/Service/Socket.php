@@ -42,6 +42,7 @@ final class Socket extends Threaded implements SocketInterface
         $bindParams = $this->bindParamsDeterminator->determine();
 
         socket_bind($this->socket, $bindParams->getHost(), $bindParams->getPort());
+        // todo: maxConcurrentConnections not working
         socket_listen($this->socket, $this->maxConcurrentConnections);
         socket_set_nonblock($this->socket);
     }
