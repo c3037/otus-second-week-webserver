@@ -5,8 +5,6 @@ namespace c3037\Otus\SecondWeek\BracketsServer\Server\Service\Thread;
 
 use c3037\Otus\SecondWeek\BracketsServer\Socket\Service\SocketInterface;
 use c3037\Otus\SecondWeek\BracketsServer\Worker\Service\WorkerInterface;
-use Psr\Container\ContainerExceptionInterface;
-use Psr\Container\ContainerInterface;
 use Thread;
 use Volatile;
 
@@ -18,9 +16,9 @@ final class ConnectionAcceptorThread extends Thread implements ThreadInterface
     private $workerList;
 
     /**
-     * @var ContainerInterface
+     * @var bool
      */
-    private $container;
+    private $terminateSignal = false;
 
     /**
      * @var array
@@ -28,9 +26,14 @@ final class ConnectionAcceptorThread extends Thread implements ThreadInterface
     private $autoloaders;
 
     /**
-     * @var bool
+     * @var SocketInterface
      */
-    private $terminateSignal = false;
+    private $socket;
+
+    /**
+     * @var WorkerInterface
+     */
+    private $subProcessWorker;
 
     /**
      * @param Volatile $workerList
@@ -41,19 +44,30 @@ final class ConnectionAcceptorThread extends Thread implements ThreadInterface
     }
 
     /**
-     * @param ContainerInterface $container
-     */
-    public function setContainer(ContainerInterface $container): void
-    {
-        $this->container = $container;
-    }
-
-    /**
      * @param array $autoloaders
+     * @return void
      */
     public function setAutoloaders(array $autoloaders): void
     {
         $this->autoloaders = $autoloaders;
+    }
+
+    /**
+     * @param SocketInterface $socket
+     * @return void
+     */
+    public function setSocket(SocketInterface $socket): void
+    {
+        $this->socket = $socket;
+    }
+
+    /**
+     * @param WorkerInterface $subProcessWorker
+     * @return void
+     */
+    public function setSubProcessWorker(WorkerInterface $subProcessWorker): void
+    {
+        $this->subProcessWorker = $subProcessWorker;
     }
 
     /**
@@ -63,10 +77,7 @@ final class ConnectionAcceptorThread extends Thread implements ThreadInterface
     {
         $this->bindAutoloaders();
 
-        try {
-            $this->waitConnections($this->createSocket());
-        } catch (ContainerExceptionInterface $e) {
-        }
+        $this->runWaitConnectionLoop();
     }
 
     /**
@@ -88,40 +99,25 @@ final class ConnectionAcceptorThread extends Thread implements ThreadInterface
     }
 
     /**
-     * @return SocketInterface
-     * @throws ContainerExceptionInterface
+     * @return void
      */
-    private function createSocket(): SocketInterface
-    {
-        $socket = $this->container->get('socket');
-        $socket->bind();
-
-        return $socket;
-    }
-
-    /**
-     * @param SocketInterface $socket
-     * @throws ContainerExceptionInterface
-     */
-    private function waitConnections(SocketInterface $socket): void
+    private function runWaitConnectionLoop(): void
     {
         while (true) {
             if ($this->hasTerminateSignal()) {
                 break;
             }
 
-            $newConnection = $socket->getNewConnection();
-            if ($newConnection) {
+            if ($clientConnection = $this->socket->acceptConnection()) {
 
                 $workerPid = pcntl_fork();
                 if (empty($workerPid)) {
-                    $this->getWorkerService()->communicate($newConnection);
+                    $this->subProcessWorker->handle($clientConnection);
                     break;
                 }
 
                 $this->addWorkerToList($workerPid);
-                unset($newConnection);
-
+                unset($clientConnection);
             }
             usleep(200000);
         }
@@ -136,16 +132,8 @@ final class ConnectionAcceptorThread extends Thread implements ThreadInterface
     }
 
     /**
-     * @return WorkerInterface
-     * @throws ContainerExceptionInterface
-     */
-    private function getWorkerService(): WorkerInterface
-    {
-        return $this->container->get('worker');
-    }
-
-    /**
      * @param int $workerPid
+     * @return void
      */
     private function addWorkerToList(int $workerPid): void
     {

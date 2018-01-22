@@ -6,11 +6,11 @@ parameters:
         cli_arguments:
             short: 'h'
             long: 'host'
-        environment_variable: 'BSS_HOST'
+        environment_variable: 'BRACKETS_SERVER_HOST'
         default: 'localhost'
     port:
         cli_arguments:
             short: 'p'
             long: 'port'
-        environment_variable: 'BSS_PORT'
+        environment_variable: 'BRACKETS_SERVER_PORT'
         default: 19118

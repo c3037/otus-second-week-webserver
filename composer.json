@@ -8,7 +8,7 @@
     ],
     "require": {
         "php": "^7.2.1",
-        "ext-pthreads": "^3.1.7-dev",
+        "ext-pthreads": "*",
         "symfony/config": "^4.0",
         "symfony/dependency-injection": "^4.0",
         "symfony/yaml": "^4.0",

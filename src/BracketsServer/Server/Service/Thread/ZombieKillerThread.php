@@ -72,6 +72,7 @@ final class ZombieKillerThread extends Thread implements ThreadInterface
 
     /**
      * @param int $workerPid
+     * @return void
      */
     private function dropWorkerFromList(int $workerPid): void
     {

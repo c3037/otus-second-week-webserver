@@ -7,6 +7,7 @@ interface WorkerInterface
 {
     /**
      * @param resource $clientConnection
+     * @return void
      */
-    public function communicate($clientConnection): void;
+    public function handle($clientConnection): void;
 }

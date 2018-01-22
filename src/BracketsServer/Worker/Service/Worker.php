@@ -3,8 +3,6 @@ declare(strict_types=1);
 
 namespace c3037\Otus\SecondWeek\BracketsServer\Worker\Service;
 
-use c3037\Otus\SecondWeek\BracketsServer\RequestProcessor\Service\RequestProcessorInterface;
-
 final class Worker implements WorkerInterface
 {
     /**
@@ -40,8 +38,9 @@ final class Worker implements WorkerInterface
     /**
      * {@inheritdoc}
      */
-    public function communicate($clientConnection): void
+    public function handle($clientConnection): void
     {
+        $this->setBlockMode($clientConnection);
         $this->printWelcomeMessage($clientConnection);
 
         while (true) {
@@ -60,14 +59,24 @@ final class Worker implements WorkerInterface
      * @param resource $clientConnection
      * @return void
      */
+    private function setBlockMode($clientConnection): void
+    {
+        socket_set_block($clientConnection);
+    }
+
+    /**
+     * @param resource $clientConnection
+     * @return void
+     */
     private function printWelcomeMessage($clientConnection): void
     {
-        $message = sprintf(
-            "Welcome.%sTo quit, type '%s'.%s",
-            PHP_EOL,
-            $this->quitCommand,
-            PHP_EOL
-        );
+        $message =
+            sprintf(
+                "Welcome to server.%sTo quit, type '%s'.%s",
+                PHP_EOL,
+                $this->quitCommand,
+                PHP_EOL
+            );
 
         $this->printMessage($clientConnection, $message);
     }
@@ -75,6 +84,7 @@ final class Worker implements WorkerInterface
     /**
      * @param resource $clientConnection
      * @param string $message
+     * @return void
      */
     private function printMessage($clientConnection, string $message): void
     {

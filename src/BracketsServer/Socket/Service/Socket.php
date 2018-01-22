@@ -3,7 +3,9 @@ declare(strict_types=1);
 
 namespace c3037\Otus\SecondWeek\BracketsServer\Socket\Service;
 
-final class Socket implements SocketInterface
+use Threaded;
+
+final class Socket extends Threaded implements SocketInterface
 {
     /**
      * @var resource
@@ -33,14 +35,6 @@ final class Socket implements SocketInterface
     }
 
     /**
-     * Destructor.
-     */
-    public function __destruct()
-    {
-        socket_close($this->socket);
-    }
-
-    /**
      * {@inheritdoc}
      */
     public function bind(): void
@@ -55,13 +49,16 @@ final class Socket implements SocketInterface
     /**
      * {@inheritdoc}
      */
-    public function getNewConnection()
+    public function close(): void
     {
-        $connection = socket_accept($this->socket);
-        if ($connection) {
-            socket_set_block($connection);
-        }
+        socket_close($this->socket);
+    }
 
-        return $connection;
+    /**
+     * {@inheritdoc}
+     */
+    public function acceptConnection()
+    {
+        return socket_accept($this->socket);
     }
 }

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "66be1ad2b29bb959903228488058a291",
+    "content-hash": "4219ee85c64895bf37129f14ac0472be",
     "packages": [
         {
             "name": "c3037/otus-first-week-library",
@@ -1795,14 +1795,12 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "ext-pthreads": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
         "php": "^7.2.1",
-        "ext-pthreads": "^3.1.7-dev"
+        "ext-pthreads": "*"
     },
     "platform-dev": []
 }

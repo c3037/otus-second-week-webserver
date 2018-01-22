@@ -7,15 +7,13 @@ services:
             - '%max_concurrent_connections%'
         shared: false
 
-    # Bind params determinator
     bind_params_determinator:
         class: c3037\Otus\SecondWeek\BracketsServer\Socket\Service\BindParamsDeterminator
         arguments:
-            - '%script_arguments%'
             - '%host%'
             - '%port%'
 
-    # Child process worker
+    # Worker
     worker:
         class: c3037\Otus\SecondWeek\BracketsServer\Worker\Service\Worker
         arguments:
@@ -23,9 +21,8 @@ services:
             - '%quit_command%'
             - '%max_input_message_length%'
 
-    # Brackets validation processor
     brackets_validation_processor:
-        class: c3037\Otus\SecondWeek\BracketsServer\RequestProcessor\Service\BracketsValidationProcessor
+        class: c3037\Otus\SecondWeek\BracketsServer\Worker\Service\BracketsValidationProcessor
         arguments:
             - '@brackets_validator'
 

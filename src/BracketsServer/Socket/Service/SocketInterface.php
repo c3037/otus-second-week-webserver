@@ -11,7 +11,12 @@ interface SocketInterface
     public function bind(): void;
 
     /**
+     * @return void
+     */
+    public function close(): void;
+
+    /**
      * @return resource|bool
      */
-    public function getNewConnection();
+    public function acceptConnection();
 }

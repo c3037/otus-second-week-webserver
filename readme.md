@@ -1,8 +1,8 @@
 ## Run
 
-export BSS_HOST='localhost'
+export BRACKETS_SERVER_HOST='localhost'
 
-export BSS_PORT=19118
+export BRACKETS_SERVER_PORT=19118
 
 nohup {pathToProject}/bin/server.php &
 
