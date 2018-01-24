@@ -3,17 +3,17 @@ declare(strict_types=1);
 
 namespace c3037\Otus\SecondWeek\BracketsServer\Server\Service\Thread;
 
-use c3037\Otus\SecondWeek\BracketsServer\Server\Service\WorkerList\WorkerListInterface;
 use c3037\Otus\SecondWeek\BracketsServer\Socket\Service\SocketInterface;
 use c3037\Otus\SecondWeek\BracketsServer\Worker\Service\WorkerInterface;
+use c3037\Otus\SecondWeek\BracketsServer\Worker\Service\WorkerPoolInterface;
 use Thread;
 
 final class ConnectionAcceptorThread extends Thread implements ThreadInterface
 {
     /**
-     * @var WorkerListInterface
+     * @var WorkerPoolInterface
      */
-    private $workerList;
+    private $workerPool;
 
     /**
      * @var bool
@@ -36,11 +36,11 @@ final class ConnectionAcceptorThread extends Thread implements ThreadInterface
     private $subProcessWorker;
 
     /**
-     * @param WorkerListInterface $workerList
+     * @param WorkerPoolInterface $workerPool
      */
-    public function __construct(WorkerListInterface $workerList)
+    public function __construct(WorkerPoolInterface $workerPool)
     {
-        $this->workerList = $workerList;
+        $this->workerPool = $workerPool;
     }
 
     /**
@@ -117,7 +117,7 @@ final class ConnectionAcceptorThread extends Thread implements ThreadInterface
                     break;
                 }
 
-                $this->addWorkerToList($workerPid);
+                $this->addWorkerToPool($workerPid);
                 unset($clientConnection);
             }
             usleep(200000);
@@ -137,17 +137,17 @@ final class ConnectionAcceptorThread extends Thread implements ThreadInterface
      */
     private function canAcceptNewConnections(): bool
     {
-        return !$this->workerList->isFull();
+        return !$this->workerPool->isFull();
     }
 
     /**
      * @param int $workerPid
      * @return void
      */
-    private function addWorkerToList(int $workerPid): void
+    private function addWorkerToPool(int $workerPid): void
     {
         $this->synchronized(function () use ($workerPid) {
-            $this->workerList[$workerPid] = $workerPid;
+            $this->workerPool[$workerPid] = $workerPid;
         });
     }
 }

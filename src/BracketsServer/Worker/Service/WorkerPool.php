@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace c3037\Otus\SecondWeek\BracketsServer\Server\Service\WorkerList;
+namespace c3037\Otus\SecondWeek\BracketsServer\Worker\Service;
 
 use Volatile;
 
@@ -13,7 +13,7 @@ use Volatile;
  * @method bool valid
  * @method void rewind
  */
-final class WorkerList extends Volatile implements WorkerListInterface
+final class WorkerPool extends Volatile implements WorkerPoolInterface
 {
     /**
      * @var int

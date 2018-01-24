@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace c3037\Otus\SecondWeek\BracketsServer\Socket\Service;
+namespace c3037\Otus\SecondWeek\BracketsServer\Socket\Service\BindParamsDeterminator;
 
 use c3037\Otus\SecondWeek\BracketsServer\Socket\Dto\BindParams;
 

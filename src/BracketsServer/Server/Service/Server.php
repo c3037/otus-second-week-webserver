@@ -7,9 +7,9 @@ use ArrayObject;
 use c3037\Otus\SecondWeek\BracketsServer\Server\Service\Thread\ConnectionAcceptorThread;
 use c3037\Otus\SecondWeek\BracketsServer\Server\Service\Thread\ThreadInterface;
 use c3037\Otus\SecondWeek\BracketsServer\Server\Service\Thread\ZombieKillerThread;
-use c3037\Otus\SecondWeek\BracketsServer\Server\Service\WorkerList\WorkerListInterface;
 use c3037\Otus\SecondWeek\BracketsServer\Socket\Service\SocketInterface;
 use c3037\Otus\SecondWeek\BracketsServer\Worker\Service\WorkerInterface;
+use c3037\Otus\SecondWeek\BracketsServer\Worker\Service\WorkerPoolInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DependencyInjection\Exception\ServiceCircularReferenceException;
 use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
@@ -24,7 +24,7 @@ final class Server implements ServerInterface
     /**
      * @var ArrayObject|ThreadInterface[]
      */
-    private $threadList;
+    private $threadPool;
 
     /**
      * @param ContainerInterface $container
@@ -32,7 +32,7 @@ final class Server implements ServerInterface
     public function __construct(ContainerInterface $container)
     {
         $this->container = $container;
-        $this->threadList = new ArrayObject();
+        $this->threadPool = new ArrayObject();
     }
 
     /**
@@ -40,10 +40,10 @@ final class Server implements ServerInterface
      */
     public function run(): void
     {
-        $workerList = $this->createWorkerList();
+        $workerPool = $this->createWorkerPool();
 
-        $this->startConnectionAcceptorThread($workerList);
-        $this->startZombieKillerThread($workerList);
+        $this->startConnectionAcceptorThread($workerPool);
+        $this->startZombieKillerThread($workerPool);
     }
 
     /**
@@ -55,29 +55,29 @@ final class Server implements ServerInterface
     }
 
     /**
-     * @return WorkerListInterface
+     * @return WorkerPoolInterface
      * @throws ServiceNotFoundException
      * @throws ServiceCircularReferenceException
      */
-    private function createWorkerList(): WorkerListInterface
+    private function createWorkerPool(): WorkerPoolInterface
     {
-        return $this->container->get('worker_list');
+        return $this->container->get('worker_pool');
     }
 
     /**
-     * @param WorkerListInterface $workerList
+     * @param WorkerPoolInterface $workerPool
      * @return void
      * @throws ServiceCircularReferenceException
      * @throws ServiceNotFoundException
      */
-    private function startConnectionAcceptorThread(WorkerListInterface $workerList): void
+    private function startConnectionAcceptorThread(WorkerPoolInterface $workerPool): void
     {
-        $thread = new ConnectionAcceptorThread($workerList);
+        $thread = new ConnectionAcceptorThread($workerPool);
         $thread->setAutoloaders(spl_autoload_functions());
         $thread->setSocket($this->createSocket());
         $thread->setSubProcessWorker($this->createSubProcessWorker());
         $thread->start();
-        $this->threadList->append($thread);
+        $this->threadPool->append($thread);
     }
 
     /**
@@ -104,14 +104,14 @@ final class Server implements ServerInterface
     }
 
     /**
-     * @param WorkerListInterface $workerList
+     * @param WorkerPoolInterface $workerPool
      * @return void
      */
-    private function startZombieKillerThread(WorkerListInterface $workerList): void
+    private function startZombieKillerThread(WorkerPoolInterface $workerPool): void
     {
-        $thread = new ZombieKillerThread($workerList);
+        $thread = new ZombieKillerThread($workerPool);
         $thread->start();
-        $this->threadList->append($thread);
+        $this->threadPool->append($thread);
     }
 
     /**
@@ -119,7 +119,7 @@ final class Server implements ServerInterface
      */
     private function terminateThreads(): void
     {
-        foreach ($this->threadList as $thread) {
+        foreach ($this->threadPool as $thread) {
             $thread->terminate();
         }
     }

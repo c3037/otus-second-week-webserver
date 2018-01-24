@@ -3,15 +3,15 @@ declare(strict_types=1);
 
 namespace c3037\Otus\SecondWeek\BracketsServer\Server\Service\Thread;
 
-use c3037\Otus\SecondWeek\BracketsServer\Server\Service\WorkerList\WorkerListInterface;
+use c3037\Otus\SecondWeek\BracketsServer\Worker\Service\WorkerPoolInterface;
 use Thread;
 
 final class ZombieKillerThread extends Thread implements ThreadInterface
 {
     /**
-     * @var WorkerListInterface
+     * @var WorkerPoolInterface
      */
-    private $workerList;
+    private $workerPool;
 
     /**
      * @var bool
@@ -19,11 +19,11 @@ final class ZombieKillerThread extends Thread implements ThreadInterface
     private $terminateSignal = false;
 
     /**
-     * @param WorkerListInterface $workerList
+     * @param WorkerPoolInterface $workerPool
      */
-    public function __construct(WorkerListInterface $workerList)
+    public function __construct(WorkerPoolInterface $workerPool)
     {
-        $this->workerList = $workerList;
+        $this->workerPool = $workerPool;
     }
 
     /**
@@ -62,11 +62,11 @@ final class ZombieKillerThread extends Thread implements ThreadInterface
      */
     private function readWorkerExitCodes(): void
     {
-        foreach ($this->workerList as $workerPid) {
+        foreach ($this->workerPool as $workerPid) {
             if (pcntl_waitpid($workerPid, $status, WNOHANG) <= 0) {
                 continue;
             }
-            $this->dropWorkerFromList($workerPid);
+            $this->dropWorkerFromPool($workerPid);
         }
     }
 
@@ -74,10 +74,10 @@ final class ZombieKillerThread extends Thread implements ThreadInterface
      * @param int $workerPid
      * @return void
      */
-    private function dropWorkerFromList(int $workerPid): void
+    private function dropWorkerFromPool(int $workerPid): void
     {
         $this->synchronized(function () use ($workerPid) {
-            unset($this->workerList[$workerPid]);
+            unset($this->workerPool[$workerPid]);
         });
     }
 }

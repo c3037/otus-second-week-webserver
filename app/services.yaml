@@ -8,14 +8,14 @@ services:
         shared: false
 
     bind_params_determinator:
-        class: c3037\Otus\SecondWeek\BracketsServer\Socket\Service\BindParamsDeterminator
+        class: c3037\Otus\SecondWeek\BracketsServer\Socket\Service\BindParamsDeterminator\BindParamsDeterminator
         arguments:
             - '%host%'
             - '%port%'
 
-    # Worker list
-    worker_list:
-        class: c3037\Otus\SecondWeek\BracketsServer\Server\Service\WorkerList\WorkerList
+    # Worker pool
+    worker_pool:
+        class: c3037\Otus\SecondWeek\BracketsServer\Worker\Service\WorkerPool
         arguments:
             - '%max_open_connections%'
 
