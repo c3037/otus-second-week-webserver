@@ -49,7 +49,7 @@ final class Server implements ServerInterface
     /**
      * {@inheritdoc}
      */
-    public function interruptHandler(): void
+    public function terminate(): void
     {
         $this->terminateThreads();
     }

@@ -1,6 +1,8 @@
 .idea/
 /tests/log/
+/var/
 /vendor/
 .DS_Store
 /app/parameters.yaml
 /tests/phpunit.xml
+!/var/.gitkeep

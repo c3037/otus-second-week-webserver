@@ -13,5 +13,5 @@ interface ServerInterface
     /**
      * @return void
      */
-    public function interruptHandler(): void;
+    public function terminate(): void;
 }
