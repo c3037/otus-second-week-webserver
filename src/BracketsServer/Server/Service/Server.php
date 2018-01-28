@@ -3,28 +3,43 @@ declare(strict_types=1);
 
 namespace c3037\Otus\SecondWeek\BracketsServer\Server\Service;
 
-use ArrayObject;
-use c3037\Otus\SecondWeek\BracketsServer\Server\Service\Thread\ConnectionAcceptorThread;
-use c3037\Otus\SecondWeek\BracketsServer\Server\Service\Thread\ThreadInterface;
-use c3037\Otus\SecondWeek\BracketsServer\Server\Service\Thread\ZombieKillerThread;
+use c3037\Otus\SecondWeek\BracketsServer\Server\Exeption\BreakLoopException;
+use c3037\Otus\SecondWeek\BracketsServer\Server\Service\RunningWorkerPool\RunningWorkerPoolInterface;
 use c3037\Otus\SecondWeek\BracketsServer\Socket\Service\SocketInterface;
 use c3037\Otus\SecondWeek\BracketsServer\Worker\Service\WorkerInterface;
-use c3037\Otus\SecondWeek\BracketsServer\Worker\Service\WorkerPoolInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\DependencyInjection\Exception\ServiceCircularReferenceException;
-use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
 
 final class Server implements ServerInterface
 {
+    /**
+     * @var bool
+     */
+    private $terminateLoop = false;
+
     /**
      * @var ContainerInterface
      */
     private $container;
 
     /**
-     * @var ArrayObject|ThreadInterface[]
+     * @var SocketInterface
      */
-    private $threadPool;
+    private $socket;
+
+    /**
+     * @var RunningWorkerPoolInterface
+     */
+    private $runningWorkerPool;
+
+    /**
+     * @var WorkerInterface
+     */
+    private $worker;
+
+    /**
+     * @var int[]
+     */
+    private $bindedSignals;
 
     /**
      * @param ContainerInterface $container
@@ -32,7 +47,6 @@ final class Server implements ServerInterface
     public function __construct(ContainerInterface $container)
     {
         $this->container = $container;
-        $this->threadPool = new ArrayObject();
     }
 
     /**
@@ -40,10 +54,22 @@ final class Server implements ServerInterface
      */
     public function run(): void
     {
-        $workerPool = $this->createWorkerPool();
+        $this->initializeFromContainer();
 
-        $this->startConnectionAcceptorThread($workerPool);
-        $this->startZombieKillerThread($workerPool);
+        try {
+            $this->runMainLoop();
+        } catch (BreakLoopException $e) {
+        }
+
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function reload(): void
+    {
+        $this->closeNotUsingSocket($this->socket);
+        $this->initializeFromContainer();
     }
 
     /**
@@ -51,76 +77,148 @@ final class Server implements ServerInterface
      */
     public function terminate(): void
     {
-        $this->terminateThreads();
+        foreach ($this->runningWorkerPool as $workerPid => $socket) {
+            posix_kill($workerPid, SIGTERM);
+        }
+        $this->terminateLoop = true;
     }
 
     /**
-     * @return WorkerPoolInterface
-     * @throws ServiceNotFoundException
-     * @throws ServiceCircularReferenceException
+     * {@inheritdoc}
      */
-    private function createWorkerPool(): WorkerPoolInterface
+    public function bindSignalHandler(int $signalNumber, $handler): void
     {
-        return $this->container->get('worker_pool');
-    }
+        pcntl_async_signals(true);
+        pcntl_signal($signalNumber, $handler);
 
-    /**
-     * @param WorkerPoolInterface $workerPool
-     * @return void
-     * @throws ServiceCircularReferenceException
-     * @throws ServiceNotFoundException
-     */
-    private function startConnectionAcceptorThread(WorkerPoolInterface $workerPool): void
-    {
-        $thread = new ConnectionAcceptorThread($workerPool);
-        $thread->setAutoloaders(spl_autoload_functions());
-        $thread->setSocket($this->createSocket());
-        $thread->setSubProcessWorker($this->createSubProcessWorker());
-        $thread->start();
-        $this->threadPool->append($thread);
-    }
-
-    /**
-     * @return SocketInterface
-     * @throws ServiceNotFoundException
-     * @throws ServiceCircularReferenceException
-     */
-    private function createSocket(): SocketInterface
-    {
-        $socket = $this->container->get('socket');
-        $socket->bind();
-
-        return $socket;
-    }
-
-    /**
-     * @return WorkerInterface
-     * @throws ServiceNotFoundException
-     * @throws ServiceCircularReferenceException
-     */
-    private function createSubProcessWorker(): WorkerInterface
-    {
-        return $this->container->get('worker');
-    }
-
-    /**
-     * @param WorkerPoolInterface $workerPool
-     * @return void
-     */
-    private function startZombieKillerThread(WorkerPoolInterface $workerPool): void
-    {
-        $thread = new ZombieKillerThread($workerPool);
-        $thread->start();
-        $this->threadPool->append($thread);
+        $this->bindedSignals[] = $signalNumber;
     }
 
     /**
      * @return void
      */
-    private function terminateThreads(): void
+    private function initializeFromContainer(): void
     {
-        foreach ($this->threadPool as $thread) {
-            $thread->terminate();
+        $this->createSocket();
+        $this->createWorker();
+        $this->createRunningWorkerPool();
+    }
+
+    /**
+     * @return void
+     */
+    private function createSocket(): void
+    {
+        $this->socket = $this->container->get('socket');
+        $this->socket->bind();
+    }
+
+    /**
+     * @return void
+     */
+    private function createWorker(): void
+    {
+        $this->worker = $this->container->get('worker');
+    }
+
+    /**
+     * @return void
+     */
+    private function createRunningWorkerPool(): void
+    {
+        if (!$this->runningWorkerPool) {
+            $this->runningWorkerPool = $this->container->get('running_worker_pool');
+        }
+
+        $this->runningWorkerPool->setCapacity(
+            $this->container->getParameter('max_open_connections')
+        );
+    }
+
+    /**
+     * @return void
+     * @throws BreakLoopException
+     */
+    private function runMainLoop(): void
+    {
+        while (true) {
+            if ($this->terminateLoop) {
+                throw new BreakLoopException('Has terminate signal');
+            }
+
+            if ($this->canAcceptNewConnections()) {
+                $this->checkNewConnections();
+            }
+
+            $this->collectGarbage();
+
+            usleep(200000);
+        }
+    }
+
+    /**
+     * @return bool
+     */
+    private function canAcceptNewConnections(): bool
+    {
+        return !$this->runningWorkerPool->isFull();
+    }
+
+    /**
+     * @return void
+     * @throws BreakLoopException
+     */
+    private function checkNewConnections(): void
+    {
+        if ($clientConnection = $this->socket->acceptConnection()) {
+
+            $workerPid = pcntl_fork();
+            if (empty($workerPid)) {
+                $this->restoreSignalHandlers();
+                $this->worker->handle($clientConnection);
+                throw new BreakLoopException('Child process exit');
+            }
+
+            $this->runningWorkerPool->add($workerPid, $this->socket);
+        }
+    }
+
+    /**
+     * @return void
+     */
+    private function restoreSignalHandlers(): void
+    {
+        foreach ($this->bindedSignals as $bindedSignal) {
+            pcntl_signal($bindedSignal, SIG_DFL);
+        }
+    }
+
+    /**
+     * @return void
+     */
+    private function collectGarbage(): void
+    {
+        foreach ($this->runningWorkerPool as $workerPid => $socket) {
+            if (pcntl_waitpid($workerPid, $status, WNOHANG) <= 0) {
+                continue;
+            }
+
+            $this->runningWorkerPool->drop($workerPid);
+
+            if ($this->socket !== $socket) {
+                $this->closeNotUsingSocket($socket);
+            }
+        }
+    }
+
+    /**
+     * @param SocketInterface $socket
+     * @return void
+     */
+    private function closeNotUsingSocket(SocketInterface $socket): void
+    {
+        if (!$this->runningWorkerPool->isUsingSocket($socket)) {
+            $socket->close();
         }
     }
 }

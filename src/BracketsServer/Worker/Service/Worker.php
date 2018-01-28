@@ -3,10 +3,15 @@ declare(strict_types=1);
 
 namespace c3037\Otus\SecondWeek\BracketsServer\Worker\Service;
 
+use c3037\Otus\SecondWeek\BracketsServer\Socket\Service\Connection\SocketConnectionInterface;
 use c3037\Otus\SecondWeek\BracketsServer\Worker\Service\RequestProcessor\RequestProcessorInterface;
 
 final class Worker implements WorkerInterface
 {
+    private const WELCOME_MESSAGE = "Welcome to socket server.%sTo quit, type '%s'.%s";
+
+    private const BYE_MESSAGE = 'Bye!%s';
+
     /**
      * @var RequestProcessorInterface
      */
@@ -18,88 +23,55 @@ final class Worker implements WorkerInterface
     private $quitCommand;
 
     /**
-     * @var int
-     */
-    private $inputMessageChunkLength;
-
-    /**
      * @param RequestProcessorInterface $requestProcessor
      * @param string $quitCommand
-     * @param int $inputMessageChunkLength
      */
-    public function __construct(
-        RequestProcessorInterface $requestProcessor,
-        string $quitCommand,
-        int $inputMessageChunkLength
-    ) {
+    public function __construct(RequestProcessorInterface $requestProcessor, string $quitCommand)
+    {
         $this->requestProcessor = $requestProcessor;
         $this->quitCommand = $quitCommand;
-        $this->inputMessageChunkLength = $inputMessageChunkLength;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function handle($clientConnection): void
+    public function handle(SocketConnectionInterface $connection): void
     {
-        $this->setBlockMode($clientConnection);
-        $this->printWelcomeMessage($clientConnection);
+        $this->printWelcomeMessage($connection);
 
         while (true) {
-            $request = $this->readInput($clientConnection);
+            $request = $connection->read();
 
             if ($this->isQuitCommand($request)) {
-                $this->closeConnection($clientConnection);
+                $this->printByeMessage($connection);
+                $connection->close();
                 break;
             }
 
-            $this->printMessage($clientConnection, $this->requestProcessor->process($request));
+            $connection->write($this->requestProcessor->process($request));
         }
     }
 
     /**
-     * @param resource $clientConnection
+     * @param SocketConnectionInterface $clientConnection
      * @return void
      */
-    private function setBlockMode($clientConnection): void
+    private function printWelcomeMessage(SocketConnectionInterface $clientConnection): void
     {
-        socket_set_block($clientConnection);
+        $message = sprintf(self::WELCOME_MESSAGE, PHP_EOL, $this->quitCommand, PHP_EOL);
+
+        $clientConnection->write($message);
     }
 
     /**
-     * @param resource $clientConnection
+     * @param SocketConnectionInterface $clientConnection
      * @return void
      */
-    private function printWelcomeMessage($clientConnection): void
+    private function printByeMessage(SocketConnectionInterface $clientConnection): void
     {
-        $message =
-            sprintf(
-                "Welcome to server.%sTo quit, type '%s'.%s",
-                PHP_EOL,
-                $this->quitCommand,
-                PHP_EOL
-            );
+        $message = sprintf(self::BYE_MESSAGE, PHP_EOL);
 
-        $this->printMessage($clientConnection, $message);
-    }
-
-    /**
-     * @param resource $clientConnection
-     * @param string $message
-     * @return void
-     */
-    private function printMessage($clientConnection, string $message): void
-    {
-        socket_write($clientConnection, $message, \strlen($message));
-    }
-
-    /**
-     * @param resource $clientConnection
-     * @return string
-     */
-    private function readInput($clientConnection): string
-    {
-        return trim(socket_read($clientConnection, $this->inputMessageChunkLength));
+        $clientConnection->write($message);
     }
 
     /**
@@ -109,14 +81,5 @@ final class Worker implements WorkerInterface
     private function isQuitCommand(string $request): bool
     {
         return $this->quitCommand === $request;
-    }
-
-    /**
-     * @param resource $clientConnection
-     * @return void
-     */
-    private function closeConnection($clientConnection): void
-    {
-        socket_close($clientConnection);
     }
 }

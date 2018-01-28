@@ -19,7 +19,7 @@ if (empty($pid)) {
     };
 
     ob_start($logger, 10);
-    require_once __DIR__ . DIRECTORY_SEPARATOR . 'server.php';
+    require_once __DIR__ . '/server.php';
     ob_flush();
     exit;
 }

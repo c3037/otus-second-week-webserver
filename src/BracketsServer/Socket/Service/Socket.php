@@ -4,19 +4,16 @@ declare(strict_types=1);
 namespace c3037\Otus\SecondWeek\BracketsServer\Socket\Service;
 
 use c3037\Otus\SecondWeek\BracketsServer\Socket\Service\BindParamsDeterminator\BindParamsDeterminatorInterface;
+use c3037\Otus\SecondWeek\BracketsServer\Socket\Service\Connection\Factory\SocketConnectionFactoryInterface;
+use c3037\Otus\SecondWeek\BracketsServer\Socket\Service\Connection\SocketConnection;
 use Threaded;
 
-final class Socket extends Threaded implements SocketInterface
+final class Socket implements SocketInterface
 {
     /**
      * @var resource
      */
-    private $socket;
-
-    /**
-     * @var BindParamsDeterminatorInterface
-     */
-    private $bindParamsDeterminator;
+    private $resource;
 
     /**
      * @var int
@@ -24,15 +21,31 @@ final class Socket extends Threaded implements SocketInterface
     private $backlogSize;
 
     /**
-     * @param BindParamsDeterminatorInterface $bindParamsDeterminator
-     * @param int $maxWaitingConnections
+     * @var SocketConnectionFactoryInterface
      */
-    public function __construct(BindParamsDeterminatorInterface $bindParamsDeterminator, int $maxWaitingConnections)
-    {
-        $this->socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
+    private $connectionFactory;
 
+    /**
+     * @var BindParamsDeterminatorInterface
+     */
+    private $bindParamsDeterminator;
+
+    /**
+     * @param int $backlogSize
+     * @param SocketConnectionFactoryInterface $connectionFactory
+     * @param BindParamsDeterminatorInterface $bindParamsDeterminator
+     */
+    public function __construct(
+        int $backlogSize,
+        SocketConnectionFactoryInterface $connectionFactory,
+        BindParamsDeterminatorInterface $bindParamsDeterminator
+    ) {
+        $this->backlogSize = $backlogSize;
+        $this->connectionFactory = $connectionFactory;
         $this->bindParamsDeterminator = $bindParamsDeterminator;
-        $this->backlogSize = $maxWaitingConnections;
+
+        $this->resource = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
+        socket_set_nonblock($this->resource);
     }
 
     /**
@@ -42,17 +55,8 @@ final class Socket extends Threaded implements SocketInterface
     {
         $bindParams = $this->bindParamsDeterminator->determine();
 
-        socket_bind($this->socket, $bindParams->getHost(), $bindParams->getPort());
-        socket_listen($this->socket, $this->backlogSize);
-        socket_set_nonblock($this->socket);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function close(): void
-    {
-        socket_close($this->socket);
+        socket_bind($this->resource, $bindParams->getHost(), $bindParams->getPort());
+        socket_listen($this->resource, $this->backlogSize);
     }
 
     /**
@@ -60,6 +64,20 @@ final class Socket extends Threaded implements SocketInterface
      */
     public function acceptConnection()
     {
-        return socket_accept($this->socket);
+        $connectionResource = socket_accept($this->resource);
+
+        if ($connectionResource) {
+            return $this->connectionFactory->spawn($connectionResource);
+        }
+
+        return false;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function close(): void
+    {
+        socket_close($this->resource);
     }
 }

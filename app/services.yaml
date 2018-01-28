@@ -3,8 +3,15 @@ services:
     socket:
         class: c3037\Otus\SecondWeek\BracketsServer\Socket\Service\Socket
         arguments:
-            - '@bind_params_determinator'
             - '%max_waiting_connections%'
+            - '@socket_connection_factory'
+            - '@bind_params_determinator'
+        shared: false
+
+    socket_connection_factory:
+        class: c3037\Otus\SecondWeek\BracketsServer\Socket\Service\Connection\Factory\SocketConnectionFactory
+        arguments:
+             - '%input_message_chunk_length%'
         shared: false
 
     bind_params_determinator:
@@ -12,12 +19,11 @@ services:
         arguments:
             - '%host%'
             - '%port%'
+        shared: false
 
-    # Worker pool
-    worker_pool:
-        class: c3037\Otus\SecondWeek\BracketsServer\Worker\Service\WorkerPool
-        arguments:
-            - '%max_open_connections%'
+    # Running worker pool
+    running_worker_pool:
+        class: c3037\Otus\SecondWeek\BracketsServer\Server\Service\RunningWorkerPool\RunningWorkerPool
 
     # Worker
     worker:
@@ -25,7 +31,7 @@ services:
         arguments:
             - '@brackets_validation_processor'
             - '%quit_command%'
-            - '%input_message_chunk_length%'
+        shared: false
 
     brackets_validation_processor:
         class: c3037\Otus\SecondWeek\BracketsServer\Worker\Service\RequestProcessor\BracketsValidationProcessor
