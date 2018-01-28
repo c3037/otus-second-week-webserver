@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace c3037\Otus\SecondWeek\BracketsServer\Server\Service\Loop;
 
-use c3037\Otus\SecondWeek\BracketsServer\Server\Exeption\BreakLoopException;
+use c3037\Otus\SecondWeek\BracketsServer\Server\Exception\BreakLoopException;
 use c3037\Otus\SecondWeek\BracketsServer\Server\Service\RunningWorkerPool\RunningWorkerPoolInterface;
 use c3037\Otus\SecondWeek\BracketsServer\SignalBinder\Service\SignalBinderInterface;
 use c3037\Otus\SecondWeek\BracketsServer\Socket\Service\Connection\SocketConnectionInterface;
