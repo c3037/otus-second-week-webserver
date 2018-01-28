@@ -1,4 +1,18 @@
 services:
+    # Server
+    server_loop:
+        class: c3037\Otus\SecondWeek\BracketsServer\Server\Service\Loop\ServerLoop
+        arguments:
+            - '@running_worker_pool'
+            - '@signal_binder'
+
+    running_worker_pool:
+        class: c3037\Otus\SecondWeek\BracketsServer\Server\Service\RunningWorkerPool\RunningWorkerPool
+
+    # Signal binder
+    signal_binder:
+        class: c3037\Otus\SecondWeek\BracketsServer\SignalBinder\Service\SignalBinder
+
     # Socket
     socket:
         class: c3037\Otus\SecondWeek\BracketsServer\Socket\Service\Socket
@@ -21,10 +35,6 @@ services:
             - '%port%'
         shared: false
 
-    # Running worker pool
-    running_worker_pool:
-        class: c3037\Otus\SecondWeek\BracketsServer\Server\Service\RunningWorkerPool\RunningWorkerPool
-
     # Worker
     worker:
         class: c3037\Otus\SecondWeek\BracketsServer\Worker\Service\Worker
@@ -38,6 +48,7 @@ services:
         arguments:
             - '@brackets_validator'
 
+    # Validator
     brackets_validator:
         class: c3037\Otus\FirstWeek\Library\Validator
         arguments:

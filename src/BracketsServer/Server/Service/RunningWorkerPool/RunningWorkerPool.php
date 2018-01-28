@@ -64,8 +64,26 @@ final class RunningWorkerPool implements RunningWorkerPoolInterface
     /**
      * {@inheritdoc}
      */
+    public function clear(): void
+    {
+        $this->pool = [];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function isUsingSocket(SocketInterface $socket): bool
     {
         return \in_array($socket, $this->pool);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function terminateAll(): void
+    {
+        foreach (array_keys($this->pool) as $workerPid) {
+            posix_kill($workerPid, SIGTERM);
+        }
     }
 }

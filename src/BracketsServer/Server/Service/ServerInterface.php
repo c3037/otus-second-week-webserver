@@ -19,11 +19,4 @@ interface ServerInterface
      * @return void
      */
     public function terminate(): void;
-
-    /**
-     * @param int $signalNumber
-     * @param callable|int $handler
-     * @return void
-     */
-    public function bindSignalHandler(int $signalNumber, $handler): void;
 }

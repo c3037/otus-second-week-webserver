@@ -10,6 +10,11 @@ interface SocketInterface
     /**
      * @return void
      */
+    public function create(): void;
+
+    /**
+     * @return void
+     */
     public function bind(): void;
 
     /**

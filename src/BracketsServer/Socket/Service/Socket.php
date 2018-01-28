@@ -43,7 +43,13 @@ final class Socket implements SocketInterface
         $this->backlogSize = $backlogSize;
         $this->connectionFactory = $connectionFactory;
         $this->bindParamsDeterminator = $bindParamsDeterminator;
+    }
 
+    /**
+     * {@inheritdoc}
+     */
+    public function create(): void
+    {
         $this->resource = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
         socket_set_nonblock($this->resource);
     }

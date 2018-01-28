@@ -33,8 +33,18 @@ interface RunningWorkerPoolInterface extends IteratorAggregate
     public function drop(int $workerPid): void;
 
     /**
+     * @return void
+     */
+    public function clear(): void;
+
+    /**
      * @param SocketInterface $socket
      * @return bool
      */
     public function isUsingSocket(SocketInterface $socket): bool;
+
+    /**
+     * @return void
+     */
+    public function terminateAll(): void;
 }
