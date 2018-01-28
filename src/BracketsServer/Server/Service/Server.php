@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace c3037\Otus\SecondWeek\BracketsServer\Server\Service;
 
 use c3037\Otus\SecondWeek\BracketsServer\Server\Service\Loop\ServerLoopInterface;
+use c3037\Otus\SecondWeek\BracketsServer\Server\Service\Loop\Task\LoopTaskInterface;
 use c3037\Otus\SecondWeek\BracketsServer\Server\Service\RunningWorkerPool\RunningWorkerPoolInterface;
 use c3037\Otus\SecondWeek\BracketsServer\Socket\Service\SocketInterface;
 use c3037\Otus\SecondWeek\BracketsServer\Worker\Service\WorkerInterface;
@@ -54,8 +55,8 @@ final class Server implements ServerInterface
 
         $this->createLoop();
         $this->loop
-            ->setSocket($this->socket)
-            ->setWorker($this->createWorker());
+            ->addTask($this->createConnectionReceptionTask())
+            ->addTask($this->createGarbageCollectionTask());
         $this->loop->run();
     }
 
@@ -69,9 +70,10 @@ final class Server implements ServerInterface
 
         $this->setRunningWorkerPoolCapacity();
 
+        $this->loop->cleanTasks();
         $this->loop
-            ->setSocket($this->socket)
-            ->setWorker($this->createWorker());
+            ->addTask($this->createConnectionReceptionTask())
+            ->addTask($this->createGarbageCollectionTask());
     }
 
     /**
@@ -79,17 +81,8 @@ final class Server implements ServerInterface
      */
     public function terminate(): void
     {
-        $this->closeUnusedSocket();
         $this->runningWorkerPool->terminateAll();
         $this->loop->stop();
-    }
-
-    /**
-     * @return void
-     */
-    private function createLoop(): void
-    {
-        $this->loop = $this->container->get('server_loop');
     }
 
     /**
@@ -136,6 +129,29 @@ final class Server implements ServerInterface
     }
 
     /**
+     * @return void
+     */
+    private function createLoop(): void
+    {
+        $this->loop = $this->container->get('server_loop');
+    }
+
+    /**
+     * @return LoopTaskInterface
+     * @throws ServiceNotFoundException
+     * @throws ServiceCircularReferenceException
+     */
+    private function createConnectionReceptionTask(): LoopTaskInterface
+    {
+        $task = $this->container->get('connection_reception_task');
+        $task
+            ->setSocket($this->socket)
+            ->setWorker($this->createWorker());
+
+        return $task;
+    }
+
+    /**
      * @return WorkerInterface
      * @throws ServiceNotFoundException
      * @throws ServiceCircularReferenceException
@@ -143,5 +159,18 @@ final class Server implements ServerInterface
     private function createWorker(): WorkerInterface
     {
         return $this->container->get('worker');
+    }
+
+    /**
+     * @return LoopTaskInterface
+     * @throws ServiceNotFoundException
+     * @throws ServiceCircularReferenceException
+     */
+    private function createGarbageCollectionTask(): LoopTaskInterface
+    {
+        $task = $this->container->get('garbage_collection_task');
+        $task->setSocket($this->socket);
+
+        return $task;
     }
 }

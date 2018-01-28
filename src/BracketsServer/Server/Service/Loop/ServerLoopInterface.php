@@ -3,22 +3,20 @@ declare(strict_types=1);
 
 namespace c3037\Otus\SecondWeek\BracketsServer\Server\Service\Loop;
 
-use c3037\Otus\SecondWeek\BracketsServer\Socket\Service\SocketInterface;
-use c3037\Otus\SecondWeek\BracketsServer\Worker\Service\WorkerInterface;
+use c3037\Otus\SecondWeek\BracketsServer\Server\Service\Loop\Task\LoopTaskInterface;
 
 interface ServerLoopInterface
 {
     /**
-     * @param SocketInterface $socket
+     * @param LoopTaskInterface $loopTask
      * @return ServerLoopInterface
      */
-    public function setSocket(SocketInterface $socket): ServerLoopInterface;
+    public function addTask(LoopTaskInterface $loopTask): ServerLoopInterface;
 
     /**
-     * @param WorkerInterface $worker
-     * @return ServerLoopInterface
+     * @return void
      */
-    public function setWorker(WorkerInterface $worker): ServerLoopInterface;
+    public function cleanTasks(): void;
 
     /**
      * @return void

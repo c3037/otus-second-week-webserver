@@ -2,9 +2,17 @@ services:
     # Server
     server_loop:
         class: c3037\Otus\SecondWeek\BracketsServer\Server\Service\Loop\ServerLoop
+
+    connection_reception_task:
+        class: c3037\Otus\SecondWeek\BracketsServer\Server\Service\Loop\Task\ConnectionReceptionTask
+        arguments:
+           - '@running_worker_pool'
+           - '@signal_binder'
+
+    garbage_collection_task:
+        class: c3037\Otus\SecondWeek\BracketsServer\Server\Service\Loop\Task\GarbageCollectionTask
         arguments:
             - '@running_worker_pool'
-            - '@signal_binder'
 
     running_worker_pool:
         class: c3037\Otus\SecondWeek\BracketsServer\Server\Service\RunningWorkerPool\RunningWorkerPool
