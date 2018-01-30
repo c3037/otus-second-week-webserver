@@ -1,108 +1,108 @@
 services:
-    # Server
-    server_loop:
-        class: c3037\Otus\SecondWeek\BracketsServer\Server\Service\Loop\ServerLoop
+  # Server
+  server_loop:
+    class: c3037\Otus\SecondWeek\BracketsServer\Server\Service\Loop\ServerLoop
 
-    connection_reception_task:
-        class: c3037\Otus\SecondWeek\BracketsServer\Server\Service\Loop\Task\ConnectionReceptionTask
-        arguments:
-           - '@running_worker_pool'
-           - '@signal_binder'
+  connection_reception_task:
+    class: c3037\Otus\SecondWeek\BracketsServer\Server\Service\Loop\Task\ConnectionReceptionTask
+    arguments:
+       - '@running_worker_pool'
+       - '@signal_binder'
 
-    garbage_collection_task:
-        class: c3037\Otus\SecondWeek\BracketsServer\Server\Service\Loop\Task\GarbageCollectionTask
-        arguments:
-            - '@running_worker_pool'
+  garbage_collection_task:
+    class: c3037\Otus\SecondWeek\BracketsServer\Server\Service\Loop\Task\GarbageCollectionTask
+    arguments:
+      - '@running_worker_pool'
 
-    running_worker_pool:
-        class: c3037\Otus\SecondWeek\BracketsServer\Server\Service\RunningWorkerPool\RunningWorkerPool
+  running_worker_pool:
+    class: c3037\Otus\SecondWeek\BracketsServer\Server\Service\RunningWorkerPool\RunningWorkerPool
 
-    # Signal binder
-    signal_binder:
-        class: c3037\Otus\SecondWeek\BracketsServer\SignalBinder\Service\SignalBinder
+  # Signal binder
+  signal_binder:
+    class: c3037\Otus\SecondWeek\BracketsServer\SignalBinder\Service\SignalBinder
 
-    # Socket
-    socket:
-        class: c3037\Otus\SecondWeek\BracketsServer\Socket\Service\Socket
-        arguments:
-            - '%max_waiting_connections%'
-            - '@socket_connection_factory'
-            - '@bind_params_determinator'
-        shared: false
+  # Socket
+  socket:
+    class: c3037\Otus\SecondWeek\BracketsServer\Socket\Service\Socket
+    arguments:
+      - '%max_waiting_connections%'
+      - '@socket_connection_factory'
+      - '@bind_params_determinator'
+    shared: false
 
-    socket_connection_factory:
-        class: c3037\Otus\SecondWeek\BracketsServer\Socket\Service\Connection\Factory\SocketConnectionFactory
-        arguments:
-             - '%input_message_chunk_length%'
-        shared: false
+  socket_connection_factory:
+    class: c3037\Otus\SecondWeek\BracketsServer\Socket\Service\Connection\Factory\SocketConnectionFactory
+    arguments:
+       - '%input_message_chunk_length%'
+    shared: false
 
-    bind_params_determinator:
-        class: c3037\Otus\SecondWeek\BracketsServer\Socket\Service\BindParamsDeterminator\BindParamsDeterminator
-        arguments:
-            - '%host%'
-            - '%port%'
-        shared: false
+  bind_params_determinator:
+    class: c3037\Otus\SecondWeek\BracketsServer\Socket\Service\BindParamsDeterminator\BindParamsDeterminator
+    arguments:
+      - '%host%'
+      - '%port%'
+    shared: false
 
-    # Worker
-    worker:
-        class: c3037\Otus\SecondWeek\BracketsServer\Worker\Service\Worker
-        arguments:
-            - '@brackets_validation_processor'
-            - '%quit_command%'
-        shared: false
+  # Worker
+  worker:
+    class: c3037\Otus\SecondWeek\BracketsServer\Worker\Service\Worker
+    arguments:
+      - '%quit_command%'
+      - '@brackets_validation_processor'
+    shared: false
 
-    brackets_validation_processor:
-        class: c3037\Otus\SecondWeek\BracketsServer\Worker\Service\RequestProcessor\BracketsValidationProcessor
-        arguments:
-            - '@brackets_validator'
+  brackets_validation_processor:
+    class: c3037\Otus\SecondWeek\BracketsServer\Worker\Service\RequestProcessor\BracketsValidationProcessor
+    arguments:
+      - '@brackets_validator'
 
-    # Validator
-    brackets_validator:
-        class: c3037\Otus\FirstWeek\Library\Validator
-        arguments:
-            - '@ignored_char_container'
-            - '@validation_pair_container'
-            - '@opened_symbol_stack_factory'
+  # Validator
+  brackets_validator:
+    class: c3037\Otus\FirstWeek\Library\Validator
+    arguments:
+      - '@ignored_char_container'
+      - '@validation_pair_container'
+      - '@opened_symbol_stack_factory'
 
-    ignored_char_container:
-        class: c3037\Otus\FirstWeek\Library\IgnoredChar\IgnoredCharContainer
-        calls:
-            -
-              - 'add'
-              -
-                - '@space_char'
-                - '@new_line_char'
-                - '@carriage_return_char'
-                - '@tabulation_char'
-    space_char:
-        class: c3037\Otus\FirstWeek\Library\IgnoredChar\IgnoredChar
-        arguments:
-            - ' '
-    new_line_char:
-        class: c3037\Otus\FirstWeek\Library\IgnoredChar\IgnoredChar
-        arguments:
-            - "\n"
-    carriage_return_char:
-        class: c3037\Otus\FirstWeek\Library\IgnoredChar\IgnoredChar
-        arguments:
-            - "\r"
-    tabulation_char:
-        class: c3037\Otus\FirstWeek\Library\IgnoredChar\IgnoredChar
-        arguments:
-            - "\t"
+  ignored_char_container:
+    class: c3037\Otus\FirstWeek\Library\IgnoredChar\IgnoredCharContainer
+    calls:
+      -
+        - 'add'
+        -
+        - '@space_char'
+        - '@new_line_char'
+        - '@carriage_return_char'
+        - '@tabulation_char'
+  space_char:
+    class: c3037\Otus\FirstWeek\Library\IgnoredChar\IgnoredChar
+    arguments:
+      - ' '
+  new_line_char:
+    class: c3037\Otus\FirstWeek\Library\IgnoredChar\IgnoredChar
+    arguments:
+      - "\n"
+  carriage_return_char:
+    class: c3037\Otus\FirstWeek\Library\IgnoredChar\IgnoredChar
+    arguments:
+      - "\r"
+  tabulation_char:
+    class: c3037\Otus\FirstWeek\Library\IgnoredChar\IgnoredChar
+    arguments:
+      - "\t"
 
-    validation_pair_container:
-        class: c3037\Otus\FirstWeek\Library\ValidationPair\ValidationPairContainer
-        calls:
-            -
-              - 'add'
-              -
-                - '@round_brackets'
-    round_brackets:
-        class: c3037\Otus\FirstWeek\Library\ValidationPair\ValidationPair
-        arguments:
-            - '('
-            - ')'
+  validation_pair_container:
+    class: c3037\Otus\FirstWeek\Library\ValidationPair\ValidationPairContainer
+    calls:
+      -
+        - 'add'
+        -
+        - '@round_brackets'
+  round_brackets:
+    class: c3037\Otus\FirstWeek\Library\ValidationPair\ValidationPair
+    arguments:
+      - '('
+      - ')'
 
-    opened_symbol_stack_factory:
-        class: c3037\Otus\FirstWeek\Library\OpenedSymbols\OpenedSymbolStackFactory
+  opened_symbol_stack_factory:
+    class: c3037\Otus\FirstWeek\Library\OpenedSymbols\OpenedSymbolStackFactory

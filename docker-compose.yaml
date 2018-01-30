@@ -1,10 +1,13 @@
 version: '3.4'
 services:
-  php:
-      build: .
-      volumes:
-        - '.:/var/application'
-      environment:
-        - 'BRACKETS_SERVER_PORT=${BRACKETS_SERVER_PORT}'
-      ports:
-        - '${BRACKETS_SERVER_PORT}:${BRACKETS_SERVER_PORT}'
+  validator:
+    build:
+      context: '.'
+      dockerfile: './docker/Validator.dockerfile'
+    container_name: 'validator'
+    volumes:
+      - '.:/var/application'
+    environment:
+      - 'BRACKETS_SERVER_PORT=${BRACKETS_SERVER_PORT}'
+    ports:
+      - '${BRACKETS_SERVER_PORT}:${BRACKETS_SERVER_PORT}'

@@ -13,23 +13,23 @@ final class Worker implements WorkerInterface
     private const BYE_MESSAGE = 'Bye!%s';
 
     /**
-     * @var RequestProcessorInterface
-     */
-    private $requestProcessor;
-
-    /**
      * @var string
      */
     private $quitCommand;
 
     /**
-     * @param RequestProcessorInterface $requestProcessor
-     * @param string $quitCommand
+     * @var RequestProcessorInterface
      */
-    public function __construct(RequestProcessorInterface $requestProcessor, string $quitCommand)
+    private $requestProcessor;
+
+    /**
+     * @param string $quitCommand
+     * @param RequestProcessorInterface $requestProcessor
+     */
+    public function __construct(string $quitCommand, RequestProcessorInterface $requestProcessor)
     {
-        $this->requestProcessor = $requestProcessor;
         $this->quitCommand = $quitCommand;
+        $this->requestProcessor = $requestProcessor;
     }
 
     /**

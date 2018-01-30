@@ -67,7 +67,7 @@ final class Server implements ServerInterface
      */
     public function reload(): void
     {
-        if ($this->needSocketRebind()) {
+        if ($this->shouldSocketRebind()) {
             $this->closeSocketWithoutConnections();
             $this->createSocket();
         }
@@ -117,7 +117,7 @@ final class Server implements ServerInterface
     /**
      * @return bool
      */
-    private function needSocketRebind(): bool
+    private function shouldSocketRebind(): bool
     {
         return $this->socket->getBindParams() != $this->getSocketBindParams();
     }
