@@ -3,10 +3,8 @@ declare(strict_types=1);
 
 namespace c3037\Otus\SecondWeek\BracketsServer\Socket\Service;
 
-use c3037\Otus\SecondWeek\BracketsServer\Socket\Service\BindParamsDeterminator\BindParamsDeterminatorInterface;
+use c3037\Otus\SecondWeek\BracketsServer\Socket\Dto\BindParams;
 use c3037\Otus\SecondWeek\BracketsServer\Socket\Service\Connection\Factory\SocketConnectionFactoryInterface;
-use c3037\Otus\SecondWeek\BracketsServer\Socket\Service\Connection\SocketConnection;
-use Threaded;
 
 final class Socket implements SocketInterface
 {
@@ -21,28 +19,23 @@ final class Socket implements SocketInterface
     private $backlogSize;
 
     /**
+     * @var BindParams
+     */
+    private $bindParams;
+
+    /**
      * @var SocketConnectionFactoryInterface
      */
     private $connectionFactory;
 
     /**
-     * @var BindParamsDeterminatorInterface
-     */
-    private $bindParamsDeterminator;
-
-    /**
      * @param int $backlogSize
      * @param SocketConnectionFactoryInterface $connectionFactory
-     * @param BindParamsDeterminatorInterface $bindParamsDeterminator
      */
-    public function __construct(
-        int $backlogSize,
-        SocketConnectionFactoryInterface $connectionFactory,
-        BindParamsDeterminatorInterface $bindParamsDeterminator
-    ) {
+    public function __construct(int $backlogSize, SocketConnectionFactoryInterface $connectionFactory)
+    {
         $this->backlogSize = $backlogSize;
         $this->connectionFactory = $connectionFactory;
-        $this->bindParamsDeterminator = $bindParamsDeterminator;
     }
 
     /**
@@ -57,12 +50,20 @@ final class Socket implements SocketInterface
     /**
      * {@inheritdoc}
      */
-    public function bind(): void
+    public function bind(BindParams $bindParams): void
     {
-        $bindParams = $this->bindParamsDeterminator->determine();
-
         socket_bind($this->resource, $bindParams->getHost(), $bindParams->getPort());
         socket_listen($this->resource, $this->backlogSize);
+
+        $this->bindParams = $bindParams;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getBindParams(): BindParams
+    {
+        return $this->bindParams;
     }
 
     /**

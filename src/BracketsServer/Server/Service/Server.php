@@ -6,6 +6,8 @@ namespace c3037\Otus\SecondWeek\BracketsServer\Server\Service;
 use c3037\Otus\SecondWeek\BracketsServer\Server\Service\Loop\ServerLoopInterface;
 use c3037\Otus\SecondWeek\BracketsServer\Server\Service\Loop\Task\LoopTaskInterface;
 use c3037\Otus\SecondWeek\BracketsServer\Server\Service\RunningWorkerPool\RunningWorkerPoolInterface;
+use c3037\Otus\SecondWeek\BracketsServer\Socket\Dto\BindParams;
+use c3037\Otus\SecondWeek\BracketsServer\Socket\Service\BindParamsDeterminator\BindParamsDeterminatorInterface;
 use c3037\Otus\SecondWeek\BracketsServer\Socket\Service\SocketInterface;
 use c3037\Otus\SecondWeek\BracketsServer\Worker\Service\WorkerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -65,8 +67,10 @@ final class Server implements ServerInterface
      */
     public function reload(): void
     {
-        $this->closeUnusedSocket();
-        $this->createSocket();
+        if ($this->needSocketRebind()) {
+            $this->closeSocketWithoutConnections();
+            $this->createSocket();
+        }
 
         $this->setRunningWorkerPoolCapacity();
 
@@ -94,13 +98,34 @@ final class Server implements ServerInterface
     {
         $this->socket = $this->container->get('socket');
         $this->socket->create();
-        $this->socket->bind();
+        $this->socket->bind($this->getSocketBindParams());
+    }
+
+    /**
+     * @return BindParams
+     * @throws ServiceNotFoundException
+     * @throws ServiceCircularReferenceException
+     */
+    private function getSocketBindParams(): BindParams
+    {
+        $bindParamsDeterminator = $this->container->get('bind_params_determinator');
+        /** @var BindParamsDeterminatorInterface $bindParamsDeterminator */
+
+        return $bindParamsDeterminator->determine();
+    }
+
+    /**
+     * @return bool
+     */
+    private function needSocketRebind(): bool
+    {
+        return $this->socket->getBindParams() != $this->getSocketBindParams();
     }
 
     /**
      * @return void
      */
-    private function closeUnusedSocket(): void
+    private function closeSocketWithoutConnections(): void
     {
         if (!$this->runningWorkerPool->isUsingSocket($this->socket)) {
             $this->socket->close();

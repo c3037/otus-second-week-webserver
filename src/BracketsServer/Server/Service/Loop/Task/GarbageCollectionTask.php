@@ -50,7 +50,7 @@ final class GarbageCollectionTask implements LoopTaskInterface
             $this->runningWorkerPool->drop($workerPid);
 
             if ($this->socket !== $socket) {
-                $this->closeUnusedSocket($socket);
+                $this->closeSocketWithoutConnections($socket);
             }
         }
     }
@@ -59,7 +59,7 @@ final class GarbageCollectionTask implements LoopTaskInterface
      * @param SocketInterface $socket
      * @return void
      */
-    private function closeUnusedSocket(SocketInterface $socket): void
+    private function closeSocketWithoutConnections(SocketInterface $socket): void
     {
         if (!$this->runningWorkerPool->isUsingSocket($socket)) {
             $socket->close();

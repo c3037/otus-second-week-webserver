@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace c3037\Otus\SecondWeek\BracketsServer\Socket\Service;
 
+use c3037\Otus\SecondWeek\BracketsServer\Socket\Dto\BindParams;
 use c3037\Otus\SecondWeek\BracketsServer\Socket\Service\Connection\SocketConnectionInterface;
 
 interface SocketInterface
@@ -13,9 +14,15 @@ interface SocketInterface
     public function create(): void;
 
     /**
+     * @param BindParams $bindParams
      * @return void
      */
-    public function bind(): void;
+    public function bind(BindParams $bindParams): void;
+
+    /**
+     * @return BindParams
+     */
+    public function getBindParams(): BindParams;
 
     /**
      * @return SocketConnectionInterface|bool
